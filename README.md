@@ -1,6 +1,6 @@
 <div align="center">
 
-# Arm69
+# ARM69
 
 **A riffle shuffle cipher for Roblox and beyond**
 
