@@ -14,7 +14,7 @@
 
 ---
 
-Arm69 is a symmetric cipher built on repeated riffle shuffles. Every character maps to a two-digit numeric code. The key drives a unique split offset on every shuffle pass, preventing cycle attacks. Split tokens are indexed back into the key so decoding is impossible without it.
+Arm69 is a symmetric cipher built on repeated riffle shuffles. Every character maps to a two-digit numeric code. The key can be any string -- it is encoded the same way as the message before use. The key drives a unique split offset on every shuffle pass, preventing cycle attacks. Split tokens are indexed back into the encoded key so decoding is impossible without it.
 
 ---
 
@@ -34,6 +34,19 @@ Arm69 is a symmetric cipher built on repeated riffle shuffles. Every character m
 ---
 
 ## How It Works
+
+### Step 0 -- Encode the Key
+
+Before anything else, the key is encoded using the same character map as the message. This means the key can be any string -- letters, symbols, numbers, or a mix.
+
+```
+Key:    SecretKey!
+Encoded: !19 05 03 18 05 20 !11 05 25 41
+```
+
+All subsequent steps use these encoded values, not the raw key string. Encoded key values range from `01` to `69`, which gives split offsets far more variation than raw digits alone, and guarantees that any two indices can sum to cover the full token value range.
+
+---
 
 ### Step 1 -- Encode
 
@@ -86,10 +99,11 @@ Result: A  D  B  E  C  F
 
 **Key-driven split offset:**
 
-A perfect riffle on a fixed-length list cycles back to its original order after enough passes. To break this, each pass offsets the split point using the current key digit:
+A perfect riffle on a fixed-length list cycles back to its original order after enough passes. To break this, each pass offsets the split point using the current encoded key value, clamped to stay in bounds:
 
 ```
-Pass i splits at center +/- key[i mod keyLength]
+offset = encodedKey[i mod keyLength] mod (tokenCount / 2)
+split  = center + offset
 ```
 
 Every pass performs a different split. Without the key the split sequence is unknown and the cipher cannot be reversed by brute force.
